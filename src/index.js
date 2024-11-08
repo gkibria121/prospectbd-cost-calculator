@@ -1,84 +1,115 @@
-function getServiceList() {
-    return [
-      { id: 1, name: "Architectural design", rate: 100 },
-      { id: 2, name: "Structural design", rate: 70 },
-      { id: 3, name: "Electrical design", rate: 40 },
-      { id: 4, name: "Plumbing design", rate: 25 },
-      { id: 5, name: "3D design", rate: 35 },
-    ];
+const fs = require('fs').promises;
+
+async function loadJson(fileName) {
+  const data = await fs.readFile(fileName, 'utf8');
+  return JSON.parse(data);
+} 
+
+async function getServiceList() {
+  return await loadJson('src/db/services.json');
+} 
+
+async function getQualityValues(qualityIndex) {
+  const qualities = await loadJson('src/db/qualities.json');
+  return qualities.find((quality) => quality.id == qualityIndex) ?? null;
+}
+
+async function getQualityFactor(qualityIndex) {
+  const qualityFactors = await loadJson('src/db/qualityFactors.json');
+  return qualityFactors.find((quality) => quality.id == qualityIndex) ?? null;
+}
+
+
+async function getUrgencyIndex(urgencyIndex) {
+  const urgencies = await loadJson('src/db/urgencies.json');
+  return urgencies.find((urgency) => urgency.id == urgencyIndex) ?? null;
+}
+
+function defineProject(landArea, numberOfStory, groundCoverage) {
+  return new Project(landArea, numberOfStory, groundCoverage);
+}
+
+async function calculateCost(project, serviceId, qualityIndex, urgencyIndex) {
+  const services = await getServiceList();
+  const service = services.find((service) => service.id === serviceId);
+  if (!service) {
+    throw new Error("Service not found.");
   }
-  
-  function getQualityValues(qualityIndex) {
-    const qualities = [
-      { id: 1, quality: "High", percentage: 100 },  // 100% base cost
-      { id: 2, quality: "Standard", percentage: 50 }, // 50% of the base cost
-    ];
-  
-    return qualities.find((quality) => quality.id == qualityIndex) ?? null;
+
+  const baseRate = service.rate;
+  const baseCost = project.calculateArea() * baseRate;
+
+  const quality = await getQualityValues(qualityIndex);
+  if (!quality) {
+    throw new Error("Quality not found.");
   }
-  
-  function getUrgencyIndex(urgencyIndex) {
-    const urgencies = [
-      { id: 1, urgency: "Very Urgent", percentage: 200 },    // 200% base cost
-      { id: 2, urgency: "Moderately Urgent", percentage: 150 },  // 150% base cost
-      { id: 3, urgency: "Normal delivery", percentage: 100 },    // 100% base cost
-      { id: 4, urgency: "Economy delivery", percentage: 66 },    // 66% base cost
-    ];
-  
-    return urgencies.find((urgency) => urgency.id == urgencyIndex) ?? null;
+
+  const urgency = await getUrgencyIndex(urgencyIndex);
+  if (!urgency) {
+    throw new Error("Urgency not found.");
   }
-  
-  function defineProject(landArea, numberOfStory, groundCoverage) {
-    return new Project(landArea, numberOfStory, groundCoverage);
+
+  const qualityPercentage = quality.percentage / 100;
+  const urgencyPercentage = urgency.percentage / 100;
+
+  const finalCost = baseCost * qualityPercentage * urgencyPercentage;
+
+  return finalCost;
+}
+
+
+class Project {
+  constructor(landArea, numberOfStory, groundCoverage) {
+    this.landArea = landArea;
+    this.numberOfStory = numberOfStory;
+    this.groundCoverage = groundCoverage;
   }
-  
-  function calculateCost(project, serviceId, qualityIndex, urgencyIndex) {
-    const service = getServiceList().find((service) => service.id === serviceId);
-    if (!service) {
-      throw new Error("Service not found.");
-    }
-  
-    const baseRate = service.rate;
-    const baseCost = project.calculateArea() * baseRate;
-  
-    const quality = getQualityValues(qualityIndex);
-    if (!quality) {
-      throw new Error("Quality not found.");
-    }
-  
-    const urgency = getUrgencyIndex(urgencyIndex);
-    if (!urgency) {
-      throw new Error("Urgency not found.");
-    }
-  
-    const qualityPercentage = quality.percentage / 100;  // Convert to multiplier (e.g., 50% => 0.5)
-    const urgencyPercentage = urgency.percentage / 100;  // Convert to multiplier (e.g., 200% => 2.0)
-  
-    // Calculate final cost considering quality and urgency
-    const finalCost = baseCost * qualityPercentage * urgencyPercentage;
-  
-    return finalCost;
+
+  calculateArea() {
+    return this.landArea * 720 * (this.numberOfStory - 1) * (this.groundCoverage / 100);
   }
-  
-  class Project {
-    constructor(landArea, numberOfStory, groundCoverage) {
-      this.landArea = landArea;
-      this.numberOfStory = numberOfStory;
-      this.groundCoverage = groundCoverage;
-    }
-  
-    calculateArea() {
-      return this.landArea * 720 * (this.numberOfStory - 1) * (this.groundCoverage / 100);
-    }
+}
+
+
+function buildArea(
+building
+) {
+  return building.landArea * 720 * (building.percentCovered / 100) * building.numberOfStories;
+}
+
+
+function getBuildingCost( 
+  building,
+  qualityFactor
+) {
+   return buildArea(building) * qualityFactor * 2000;
+}
+
+
+class Building {
+
+  constructor(landArea,
+    percentCovered,
+    numberOfStories) {
+    this.landArea = landArea
+    this.percentCovered = percentCovered
+    this.numberOfStories =numberOfStories
   }
-  
-  module.exports = {
-    Project,
-    myLibraryFunction,
-    getServiceList,
-    defineProject,
-    calculateCost,
-    getQualityValues,
-    getUrgencyIndex,
-  };
-  
+}
+
+function defineBuilding(landArea, percentCovered, numberOfStories) {
+  return new Building(landArea, percentCovered, numberOfStories);
+}
+
+
+module.exports = { 
+  defineBuilding, 
+  getServiceList,
+  defineProject,
+  calculateCost,
+  getQualityValues,
+  getUrgencyIndex,
+  getBuildingCost,
+  getQualityFactor,
+  buildArea
+};

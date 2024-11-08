@@ -1,0 +1,6 @@
+[
+    { "id": 1, "urgency": "Very Urgent", "percentage": 200 },
+    { "id": 2, "urgency": "Moderately Urgent", "percentage": 150 },
+    { "id": 3, "urgency": "Normal delivery", "percentage": 100 },
+    { "id": 4, "urgency": "Economy delivery", "percentage": 66 }
+  ]

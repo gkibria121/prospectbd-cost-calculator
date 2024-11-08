@@ -1,0 +1,4 @@
+[
+    { "id": 1, "quality": "High", "percentage": 100 },
+    { "id": 2, "quality": "Standard", "percentage": 50 }
+  ]

@@ -1,0 +1,7 @@
+[
+    { "id": 1, "name": "Architectural design", "rate": 100 },
+    { "id": 2, "name": "Structural design", "rate": 70 },
+    { "id": 3, "name": "Electrical design", "rate": 40 },
+    { "id": 4, "name": "Plumbing design", "rate": 25 },
+    { "id": 5, "name": "3D design", "rate": 35 }
+  ]
